@@ -1,4 +1,4 @@
-$input v_clipPosition, v_color0, v_fog, v_light, v_texcoord0, v_worldPos
+$input v_color0, v_texcoord0, v_worldPos, v_fog
 
 #include <bgfx_shader.sh>
 #include <MinecraftRenderer.Materials/ActorUtil.dragonh>
