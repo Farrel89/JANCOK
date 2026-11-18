@@ -1,4 +1,3 @@
-
 $input v_clipPosition, v_worldPosition, v_color0, v_ditheringAndMaskTinting, v_fog, v_lightmapUV, v_texcoord0, v_worldPos
 $input p, wp, fctl, ks
 
@@ -49,13 +48,12 @@ vec3 Tm(vec3 x) {
     return (x * (a * x + b)) / (x * (c * x + d) + e);
 }
 
-float3 saturation(float3 rgb, float adjustment) {
-    const float3 W = float3(0.2125, 0.7154, 0.0721);
-
+vec3 saturation(vec3 rgb, float adjustment) {
+    const vec3 W = vec3(0.2125, 0.7154, 0.0721);
     float intensity = dot(rgb, W);
 
     return mix(
-        float3(intensity, intensity, intensity),
+        vec3_splat(intensity),
         rgb,
         adjustment
     );
@@ -106,11 +104,11 @@ float vorolit(vec2 uv) {
                 hash(id + vec2(17.0, 31.0))
             );
 
-            vec2 point = offset + 0.2 + 0.6 * rnd;
+            vec2 cellPoint = offset + 0.2 + 0.6 * rnd;
 
             nearestDist = min(
                 nearestDist,
-                length(local - point)
+                length(local - cellPoint)
             );
         }
     }
