@@ -1,3 +1,4 @@
+
 $input a_position, a_color0, a_texcoord0, a_indices, a_normal
 #ifdef INSTANCING
     $input i_data1, i_data2, i_data3
@@ -17,7 +18,7 @@ uniform vec4 FogControl;
 uniform vec4 UVAnimation;
 uniform mat4 Bones[8];
 
-#define ACTOR_NATIVE_FOG 0   // 0 = fog bawaan Actor dimatikan
+#define ACTOR_NATIVE_FOG 0
 
 void main() {
     mat4 World = u_model[0];
@@ -27,22 +28,55 @@ void main() {
     vec2 texcoord0 = a_texcoord0;
     texcoord0 = applyUvAnimation(texcoord0, UVAnimation);
 
-    float lightIntensity = calculateLightIntensity(World, vec4(a_normal.xyz, 0.0), TileLightColor);
+    float lightIntensity = calculateLightIntensity(
+        World,
+        vec4(a_normal.xyz, 0.0),
+        TileLightColor
+    );
+
     lightIntensity += OverlayColor.a * 0.35;
-    vec4 light = vec4(lightIntensity * TileLightColor.rgb, 1.0);
+
+    vec4 light = vec4(
+        lightIntensity * TileLightColor.rgb,
+        1.0
+    );
 
     vec3 worldPosition;
+
 #ifdef INSTANCING
-    mat4 model = mtxFromCols(i_data1, i_data2, i_data3, vec4(0.0, 0.0, 0.0, 1.0));
-    worldPosition = instMul(model, vec4(a_position, 1.0)).xyz;
+    mat4 model = mtxFromCols(
+        i_data1,
+        i_data2,
+        i_data3,
+        vec4(0.0, 0.0, 0.0, 1.0)
+    );
+
+    worldPosition = instMul(
+        model,
+        vec4(a_position, 1.0)
+    ).xyz;
 #else
-    worldPosition = mul(World, vec4(a_position, 1.0)).xyz;
+    worldPosition = mul(
+        World,
+        vec4(a_position, 1.0)
+    ).xyz;
 #endif
 
     vec4 position = jitterVertexPosition(worldPosition);
+
     float cameraDepth = position.z;
-    float fogIntensity = calculateFogIntensity(cameraDepth, FogControl.z, FogControl.x, FogControl.y);
-    vec4 fog = vec4(FogColor.rgb, fogIntensity * float(ACTOR_NATIVE_FOG)); // <-- UBAH
+
+    float fogIntensity = calculateFogIntensity(
+        cameraDepth,
+        FogControl.z,
+        FogControl.x,
+        FogControl.y
+    );
+
+    vec4 fog = vec4(
+        FogColor.rgb,
+        fogIntensity * float(ACTOR_NATIVE_FOG)
+    );
 
 #if defined(DEPTH_ONLY) || defined(DEPTH_ONLY_OPAQUE) || defined(DEPTH_ONLY_ALPHA_TEST)
     v_texcoord0 = vec2_splat(0.0);
@@ -56,5 +90,6 @@ void main() {
     v_fog = fog;
     v_light = light;
     v_worldPos = worldPosition;
+
     gl_Position = position;
 }
