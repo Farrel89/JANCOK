@@ -114,3 +114,50 @@ vec3 actorLight() {
     }
     return l;
 }
+
+void main() {
+#if defined(DEPTH_ONLY) || defined(DEPTH_ONLY_OPAQUE) || defined(DEPTH_ONLY_ALPHA_TEST)
+    gl_FragColor = vec4_splat(0.0);
+    return;
+#else
+
+    vec4 albedo = getActorAlbedoNoColorChange(v_texcoord0, s_MatTexture, s_MatTexture1, MatColor);
+
+    bool ditherDiscard = false;
+    if (DitheringEnabledToggle.x != 0.0) {
+        vec3 camPos = mul(u_invView, vec4(0.0, 0.0, 0.0, 1.0)).xyz;
+        ditherDiscard = evaluateDitherDiscard(v_clipPosition, v_worldPos, camPos, u_view, DitherParams, DitherParams2[0]);
+    }
+
+#if defined(ALPHA_TEST)
+    float alpha = mix(albedo.a, albedo.a * OverlayColor.a, TintedAlphaTestEnabled.x);
+    if (ditherDiscard || shouldDiscard(albedo.rgb, alpha, ActorFPEpsilon.x)) {
+        discard;
+    }
+#endif
+
+#if defined(CHANGE_COLOR_MULTI)
+    albedo = applyMultiColorChange(albedo, ChangeColor.rgb, MultiplicativeTintColor.rgb);
+#elif defined(CHANGE_COLOR)
+    albedo = applyColorChange(albedo, ChangeColor, albedo.a);
+    albedo.a *= ChangeColor.a;
+#endif
+
+#if defined(ALPHA_TEST)
+    albedo.a = max(UseAlphaRewrite.x, albedo.a);
+#endif
+
+    albedo = applyActorDiffuse(albedo, v_color0.rgb, vec4(actorLight(), v_light.a), ColorBased.x, OverlayColor); // <-- UBAH
+
+#if defined(TRANSPARENT)
+    albedo = applyHudOpacity(albedo, HudOpacity.x);
+    if (ditherDiscard) {
+        albedo.a = 0.0;
+    }
+#endif
+
+    albedo.rgb = applyFog(actorGrade(albedo.rgb), v_fog.rgb, v_fog.a); // <-- UBAH
+    albedo.rgb = actorHaze(albedo.rgb);                                // <-- UBAH (baris baru)
+    gl_FragColor = albedo;
+#endif
+}
