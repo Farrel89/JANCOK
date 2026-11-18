@@ -1,4 +1,7 @@
 $input a_color0, a_position, a_texcoord0
+#ifdef INSTANCING
+    $input i_data1, i_data2, i_data3
+#endif
 $output v_color0, v_texcoord0, v_worldPos, v_fclr, v_localPos, v_time
 
 #include <bgfx_shader.sh>
