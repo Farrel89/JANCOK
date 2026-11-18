@@ -20,6 +20,6 @@ void main() {
 
     v_color0 = a_color0;
     v_texcoord0 = mul(UV0Transform, vec4(a_texcoord0, 0.0, 1.0)).xy;
-    v_worldPos = worldPosition;
+    v_worldPos = a_position; // arah langit (lokal kubus), dipakai fragment
     gl_Position = mul(u_viewProj, vec4(worldPosition, 1.0));
 }
