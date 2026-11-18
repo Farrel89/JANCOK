@@ -17,6 +17,8 @@ uniform vec4 FogControl;
 uniform vec4 UVAnimation;
 uniform mat4 Bones[8];
 
+#define ACTOR_NATIVE_FOG 0   // 0 = fog bawaan Actor dimatikan
+
 void main() {
     mat4 World = u_model[0];
 
@@ -40,7 +42,7 @@ void main() {
     vec4 position = jitterVertexPosition(worldPosition);
     float cameraDepth = position.z;
     float fogIntensity = calculateFogIntensity(cameraDepth, FogControl.z, FogControl.x, FogControl.y);
-    vec4 fog = vec4(FogColor.rgb, fogIntensity);
+    vec4 fog = vec4(FogColor.rgb, fogIntensity * float(ACTOR_NATIVE_FOG)); // <-- UBAH
 
 #if defined(DEPTH_ONLY) || defined(DEPTH_ONLY_OPAQUE) || defined(DEPTH_ONLY_ALPHA_TEST)
     v_texcoord0 = vec2_splat(0.0);
