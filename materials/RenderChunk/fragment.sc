@@ -149,11 +149,11 @@ float causticRay(vec3 pp, vec3 nn) {
     return c;
 }
 
-float godRays(vec3 pp, vec3 ww) {
+float godRays(vec3 pp, vec3 ww, vec2 fragXY) {
     float len = length(ww);
 
     float jit = fract(
-        dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))
+        dot(fragXY, vec2(0.06711056, 0.00583715))
         * 52.9829189
     );
 
@@ -183,9 +183,9 @@ float godRays(vec3 pp, vec3 ww) {
     return acc * 0.25;
 }
 
-float godRayFog(vec3 pp, vec3 ww) {
+float godRayFog(vec3 pp, vec3 ww, vec2 fragXY) {
     float jit = fract(
-        dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))
+        dot(fragXY, vec2(0.06711056, 0.00583715))
         * 52.9829189
     );
 
@@ -210,11 +210,11 @@ float godRayFog(vec3 pp, vec3 ww) {
     return acc * 0.25;
 }
 
-float volFog(vec3 pp, vec3 ww) {
+float volFog(vec3 pp, vec3 ww, vec2 fragXY) {
     float len = length(ww);
 
     float jit = fract(
-        dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))
+        dot(fragXY, vec2(0.06711056, 0.00583715))
         * 52.9829189
     );
 
@@ -849,7 +849,7 @@ void main() {
             );
 
             if (fog2 > 0.01) {
-                float dens = godRayFog(p, wp);
+                float dens = godRayFog(p, wp, gl_FragCoord.xy);
 
                 float bukanBawah = smoothstep(
                     -0.7,
