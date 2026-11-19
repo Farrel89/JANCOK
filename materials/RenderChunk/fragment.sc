@@ -2,6 +2,11 @@ $input v_clipPosition, v_worldPosition, v_color0, v_ditheringAndMaskTinting, v_f
 $input p, wp, ks
 
 #include <bgfx_shader.sh>
+
+// ===== SAKLAR TES: 1 = kode custom, 0 = shader polos =====
+#define NEW_OPAQUE      0
+#define NEW_TRANSPARENT 0
+#define NEW_ALPHATEST   0
 #include <MinecraftRenderer.Materials/DitherUtil.dragonh>
 
 uniform vec4 FogColor;
@@ -237,6 +242,7 @@ void main() {
     vec4 fctl = FogAndDistanceControl;
 
 #if defined(ALPHA_TEST)
+#if NEW_ALPHATEST
 
 #define kolor v_color0
 
@@ -513,7 +519,19 @@ _finalColor = mix(_finalColor,mix(_finalColor,v_fog*sqrt(vec4(0.8,0.8,0.8,1.0)),
 
 #undef kolor
 
+#else
+    // ---- AlphaTest polos (saklar NEW_ALPHATEST = 0) ----
+    {
+        vec4 pt = texture2D(s_MatTexture, v_texcoord0);
+        if (pt.a < 0.5) discard;
+        vec3 plm = texture2D(s_LightMapTexture, v_lightmapUV).rgb;
+        vec3 pc = pt.rgb * v_color0.rgb * plm;
+        pc = mix(pc, v_fog.rgb, v_fog.a);
+        gl_FragColor = vec4(pc, 1.0);
+    }
+#endif
 #elif defined(TRANSPARENT)
+#if NEW_TRANSPARENT
 
     vec4 _1371 = v_color0;
     vec2 _1207 = v_ditheringAndMaskTinting;
@@ -830,6 +848,17 @@ _finalColor = mix(_finalColor, mix(_finalColor,v_fog*sqrt(vec4(1.1,1.1,1.1,1.0))
     gl_FragColor = _finalColor;
 
 #else
+    // ---- Transparent polos (saklar NEW_TRANSPARENT = 0) ----
+    {
+        vec4 pt = texture2D(s_MatTexture, v_texcoord0);
+        vec3 plm = texture2D(s_LightMapTexture, v_lightmapUV).rgb;
+        vec4 pc = vec4(pt.rgb * v_color0.rgb * plm, pt.a * v_color0.a);
+        pc.rgb = mix(pc.rgb, v_fog.rgb, v_fog.a);
+        gl_FragColor = pc;
+    }
+#endif
+#else
+#if NEW_OPAQUE
 
 vec4 _811 = v_color0;
 vec2 _671 = v_ditheringAndMaskTinting;
@@ -1122,6 +1151,16 @@ _finalColor = mix(_finalColor, mix(_finalColor,v_fog*sqrt(vec4(0.8,0.8,0.8,1.0))
 
 gl_FragColor = _finalColor;
 
+#else
+    // ---- Opaque polos (saklar NEW_OPAQUE = 0) ----
+    {
+        vec4 pt = texture2D(s_MatTexture, v_texcoord0);
+        vec3 plm = texture2D(s_LightMapTexture, v_lightmapUV).rgb;
+        vec3 pc = pt.rgb * v_color0.rgb * plm;
+        pc = mix(pc, v_fog.rgb, v_fog.a);
+        gl_FragColor = vec4(pc, 1.0);
+    }
+#endif
 #endif
 
 #endif
