@@ -1,3 +1,4 @@
+
 $input v_color0, v_texcoord0, v_worldPos, v_fog, v_clipPosition, v_light
 
 #include <bgfx_shader.sh>
@@ -6,6 +7,21 @@ $input v_color0, v_texcoord0, v_worldPos, v_fog, v_clipPosition, v_light
 #include <MinecraftRenderer.Materials/DitherUtil.dragonh>
 
 uniform vec4 FogControl;
+uniform vec4 ColorBased;
+uniform vec4 ChangeColor;
+uniform vec4 UseAlphaRewrite;
+uniform vec4 TintedAlphaTestEnabled;
+uniform vec4 MatColor;
+uniform vec4 OverlayColor;
+uniform vec4 MultiplicativeTintColor;
+uniform vec4 ActorFPEpsilon;
+uniform vec4 HudOpacity;
+uniform vec4 DitherParams;
+uniform vec4 DitherParams2[3];
+uniform vec4 DitheringEnabledToggle;
+
+SAMPLER2D_AUTOREG(s_MatTexture);
+SAMPLER2D_AUTOREG(s_MatTexture1);
 
 #define ACTOR_APA 0.6
 #define ACTOR_AO 1
