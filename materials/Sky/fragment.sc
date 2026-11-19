@@ -9,6 +9,8 @@ float hash(vec2 q) {
 }
 
 void main() {
+#ifndef INSTANCING
+    // ===== varian 0: langit custom (warna langit + awan) =====
     vec4 fclr = v_fclr;
     float day   = pow(max(min(1.0 - fclr.r * 1.2, 1.0), 0.0), 0.4);
     float night = pow(max(min(1.0 - fclr.r * 1.5, 1.0), 0.0), 1.2);
@@ -56,4 +58,27 @@ void main() {
     diffuse.rgb = mix(diffuse.rgb, vec3_splat(1.0), awanMask);
 
     gl_FragColor = diffuse;
+
+#else
+    // ===== varian 1 (instancing): bawaan, hanya awan polos =====
+    vec4 diffuse = vec4(v_color0.xyz, v_color0.w);
+
+    vec3 d = normalize(v_worldPos);
+    vec2 base = d.xz / max(d.y, 0.02);
+    float dh = hash(base * 999.0);
+
+    float shd = 0.0;
+    float mm = 1.0;
+    float sc = 1.4;
+    for (int i = 0; i < 12; i++) {
+        sc /= 1.009;
+        mm *= 0.96;
+        float awan = step(0.88, hash(floor(base * sc + vec2_splat(dh * 0.02 + v_time * 0.04))));
+        shd = mix(shd, mm, awan);
+    }
+    float awanMask = shd * smoothstep(0.0, 0.12, d.y);
+    diffuse.rgb = mix(diffuse.rgb, vec3_splat(1.0), awanMask);
+
+    gl_FragColor = diffuse;
+#endif
 }
