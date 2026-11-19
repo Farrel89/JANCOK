@@ -12,9 +12,6 @@ uniform vec4 DitherParams2[3];
 
 SAMPLER2D_AUTOREG(s_MatTexture);
 SAMPLER2D_AUTOREG(s_LightMapTexture);
-#if defined(SEASONS)
-SAMPLER2D_AUTOREG(s_SeasonsTexture);
-#endif
 
 #define TIME ViewPositionAndTime.w
 #define saturate(x) clamp(x, 0.0, 1.0)
@@ -239,35 +236,7 @@ void main() {
 
     vec4 fctl = FogAndDistanceControl;
 
-#if defined(SEASONS)
-
-    // variant seasons: bawaan (tint seasons + ACES)
-    vec4 sTex = texture2D(s_MatTexture, v_texcoord0);
-  #if defined(ALPHA_TEST)
-    bool sCut = false;
-    #if defined(DITHERING)
-    if (v_ditheringAndMaskTinting.x > 0.5) {
-        sCut = evaluateDitherDiscard(v_clipPosition, v_worldPosition.xyz, ViewPositionAndTime.xyz, u_view, DitherParams, DitherParams2[2]);
-    }
-    #endif
-    if (sCut || (sTex.w < 0.5)) {
-        discard;
-    }
-  #endif
-  #if defined(TRANSPARENT)
-    if (v_ditheringAndMaskTinting.y > 0.5) {
-        sTex = vec4(mix(sTex.xyz, sTex.xyz * v_color0.xyz, vec3_splat(sTex.w)) * v_color0.w, 1.0);
-    } else {
-        sTex = vec4(sTex.xyz * v_color0.xyz, sTex.w * v_color0.w);
-    }
-  #else
-    sTex = vec4((sTex.xyz * mix(vec3_splat(1.0), texture2D(s_SeasonsTexture, v_color0.xy).xyz * 2.0, vec3_splat(v_color0.z))) * v_color0.w, 1.0);
-  #endif
-    vec4 sFinal = vec4(mix(texture2D(s_LightMapTexture, v_lightmapUV).xyz * sTex.xyz, FogColor.xyz, vec3_splat(v_fog.w)), sTex.w);
-    sFinal.xyz = ACESFilm(sFinal.xyz);
-    gl_FragColor = sFinal;
-
-#elif defined(ALPHA_TEST)
+#if defined(ALPHA_TEST)
 
 #define kolor v_color0
 
