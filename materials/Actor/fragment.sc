@@ -1,4 +1,3 @@
-
 $input v_color0, v_texcoord0, v_worldPos, v_fog, v_clipPosition, v_light
 
 #include <bgfx_shader.sh>
@@ -48,7 +47,7 @@ vec3 actorSaturation(vec3 rgb, float adj) {
     );
 }
 
-vec3 actorGrade(vec3 c) {
+vec3 actorGrade(vec3 c, vec4 v_fog, vec4 v_clipPosition, vec4 v_light, vec3 v_worldPos) {
     vec4 fctl = FogControl;
 
     if (fctl.z < 1.0) {
@@ -202,7 +201,7 @@ vec3 actorGrade(vec3 c) {
     return c;
 }
 
-vec3 actorHaze(vec3 c) {
+vec3 actorHaze(vec3 c, vec4 v_fog, vec4 v_clipPosition) {
     vec4 fctl = FogControl;
 
     if (fctl.z < 1.0) {
@@ -239,7 +238,7 @@ vec3 actorHaze(vec3 c) {
     return mix(c, h, 1.0 - hujand);
 }
 
-vec3 actorLight() {
+vec3 actorLight(vec4 v_fog, vec4 v_light) {
     vec3 l = v_light.xyz;
 
     if (FogControl.z >= 1.0 && endFog(v_fog)) {
@@ -342,7 +341,7 @@ void main() {
     albedo = applyActorDiffuse(
         albedo,
         v_color0.rgb,
-        vec4(actorLight(), v_light.a),
+        vec4(actorLight(v_fog, v_light), v_light.a),
         ColorBased.x,
         OverlayColor
     );
@@ -361,12 +360,12 @@ void main() {
 #endif
 
     albedo.rgb = applyFog(
-        actorGrade(albedo.rgb),
+        actorGrade(albedo.rgb, v_fog, v_clipPosition, v_light, v_worldPos),
         v_fog.rgb,
         v_fog.a
     );
 
-    albedo.rgb = actorHaze(albedo.rgb);
+    albedo.rgb = actorHaze(albedo.rgb, v_fog, v_clipPosition);
 
     gl_FragColor = albedo;
 
