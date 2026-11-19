@@ -4,7 +4,7 @@ $input p, wp, ks
 #include <bgfx_shader.sh>
 
 // ===== SAKLAR TES: 1 = kode custom, 0 = shader polos =====
-#define NEW_OPAQUE      0
+#define NEW_OPAQUE      1
 #define NEW_TRANSPARENT 0
 #define NEW_ALPHATEST   0
 #include <MinecraftRenderer.Materials/DitherUtil.dragonh>
