@@ -34,13 +34,11 @@ vec3 gerak(vec3 lpos, vec4 col, float sky) {
         o.x += sin(t * 2.0 + ph) * 0.03;
     }
 #elif defined(TRANSPARENT)
-  #ifndef SEASONS
     // air: hanya vertex berwarna biru; makin tinggi di blok makin kuat, redup di gua
     if (col.b > col.r) {
         o.y += sin(t * 4.0 + (lpos.x + lpos.z) * 1.9635 + lpos.y * 0.3927)
              * sin(lpos.z * 1.1781) * 0.05 * sky * frp.y;
     }
-  #endif
 #endif
 
     // bawah air: seluruh dunia bergoyang pelan
@@ -48,19 +46,6 @@ vec3 gerak(vec3 lpos, vec4 col, float sky) {
         o.x += sin(t * 2.0 + ph) * 0.03;
     }
     return o;
-}
-
-// offset animasi ke posisi layar (jitter TAA sama seperti jitterVertexPosition, w = 0)
-vec4 gerakClip(vec3 o) {
-    mat4 offsetProj = u_proj;
-#if BGFX_SHADER_LANGUAGE_GLSL
-    offsetProj[2][0] += SubPixelOffset.x;
-    offsetProj[2][1] -= SubPixelOffset.y;
-#else
-    offsetProj[0][2] += SubPixelOffset.x;
-    offsetProj[1][2] -= SubPixelOffset.y;
-#endif
-    return mul(offsetProj, mul(u_view, vec4(o, 0.0)));
 }
 #endif
 
@@ -116,7 +101,13 @@ void main() {
 
     vec2 ditheringAndMaskTinting = vec2(ditherX, ditherY);
 
+    // posisi layar tanpa animasi (dipakai ks / v_clipPosition) dan dengan animasi (gl_Position)
+    vec3 geser = vec3_splat(0.0);
+#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
+    geser = gerak(a_position, a_color0, lightmapY);
+#endif
     vec4 position = jitterVertexPosition(worldPos);
+    vec4 positionAnim = jitterVertexPosition(worldPos + geser);
 
     float camDist = length(ViewPositionAndTime.xyz - worldPos);
 
@@ -127,12 +118,10 @@ void main() {
         1.0
     );
 
-#if !defined(SEASONS)
-  #if defined(OPAQUE)
+#if defined(OPAQUE)
     fogIntensity = 0.0;
-  #elif defined(ALPHA_TEST)
+#elif defined(ALPHA_TEST)
     fogIntensity *= FOG_AMOUNT;
-  #endif
 #endif
 
     vec4 fog = vec4(FogColor.rgb, fogIntensity);
@@ -156,14 +145,10 @@ void main() {
     v_texcoord0 = uv0;
     v_worldPos = worldPos;
 
-    gl_Position = position;
+    gl_Position = positionAnim;
 
     p = a_position;
     wp = worldPos;
     fctl = FogAndDistanceControl;
     ks = position.xyz;
-
-#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
-    gl_Position += gerakClip(gerak(a_position, a_color0, lightmapY));
-#endif
 }
