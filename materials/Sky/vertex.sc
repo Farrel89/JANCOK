@@ -12,7 +12,10 @@ uniform vec4 ViewPositionAndTime;
 
 void main() {
     vec4 hp = vec4(a_position, 1.0);
+#ifndef INSTANCING
+    // varian 0: langit melengkung ke bawah (varian 1 / instancing dibiarkan bawaan)
     hp.y -= length(hp.xz) * 0.3;
+#endif
 #ifdef INSTANCING
     mat4 model = mtxFromCols(i_data1, i_data2, i_data3, vec4(0.0, 0.0, 0.0, 1.0));
     vec3 worldPos = instMul(model, hp).xyz;
