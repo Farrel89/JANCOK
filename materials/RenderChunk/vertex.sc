@@ -15,6 +15,55 @@ uniform vec4 ViewPositionAndTime;
 uniform vec4 FogColor;
 uniform vec4 MeshContext;
 
+// ===== animasi vertex (offset dalam ruang dunia) =====
+#define FOG_AMOUNT 0.3
+
+#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
+vec3 gerak(vec3 lpos, vec4 col, float sky) {
+    float t  = ViewPositionAndTime.w;
+    // fase dari posisi lokal chunk; kelipatan 2*PI/16 supaya mulus di batas chunk dan tidak ikut kamera
+    float ph = (lpos.x + lpos.y + lpos.z) * 1.1781;
+    vec3 frp = fract(lpos);
+    vec3 o   = vec3_splat(0.0);
+
+#if defined(ALPHA_TEST)
+    // daun & rumput
+    bool tinted = (col.r != col.g && col.g != col.b && frp.y != 0.015625);
+    bool pucuk  = (frp.y == 0.9375 && (frp.x == 0.0 || frp.z == 0.0));
+    if (col.a == 0.0 || tinted || pucuk) {
+        o.x += sin(t * 2.0 + ph) * 0.03;
+    }
+#elif defined(TRANSPARENT)
+  #ifndef SEASONS
+    // air: hanya vertex berwarna biru; makin tinggi di blok makin kuat, redup di gua
+    if (col.b > col.r) {
+        o.y += sin(t * 4.0 + (lpos.x + lpos.z) * 1.9635 + lpos.y * 0.3927)
+             * sin(lpos.z * 1.1781) * 0.05 * sky * frp.y;
+    }
+  #endif
+#endif
+
+    // bawah air: seluruh dunia bergoyang pelan
+    if (FogAndDistanceControl.x < 0.01) {
+        o.x += sin(t * 2.0 + ph) * 0.03;
+    }
+    return o;
+}
+
+// offset animasi ke posisi layar (jitter TAA sama seperti jitterVertexPosition, w = 0)
+vec4 gerakClip(vec3 o) {
+    mat4 offsetProj = u_proj;
+#if BGFX_SHADER_LANGUAGE_GLSL
+    offsetProj[2][0] += SubPixelOffset.x;
+    offsetProj[2][1] -= SubPixelOffset.y;
+#else
+    offsetProj[0][2] += SubPixelOffset.x;
+    offsetProj[1][2] -= SubPixelOffset.y;
+#endif
+    return mul(offsetProj, mul(u_view, vec4(o, 0.0)));
+}
+#endif
+
 void main() {
 #ifdef INSTANCING
     mat4 model = mtxFromCols(i_data1, i_data2, i_data3, vec4(0.0, 0.0, 0.0, 1.0));
@@ -78,6 +127,14 @@ void main() {
         1.0
     );
 
+#if !defined(SEASONS)
+  #if defined(OPAQUE)
+    fogIntensity = 0.0;
+  #elif defined(ALPHA_TEST)
+    fogIntensity *= FOG_AMOUNT;
+  #endif
+#endif
+
     vec4 fog = vec4(FogColor.rgb, fogIntensity);
 
 #if defined(TRANSPARENT)
@@ -85,13 +142,13 @@ void main() {
         color.a = mix(
             a_color0.a,
             1.0,
-            clamp(camDist / FogAndDistanceControl.w, 0.0, 1.0)
+            clamp(camDist / fogAndDist.w, 0.0, 1.0)
         );
     }
 #endif
 
     v_clipPosition = position;
-    v_worldPosition = vec4(worldPos, 1.0);
+    v_worldPosition = vec4(worldPos, 0.0);
     v_color0 = color;
     v_ditheringAndMaskTinting = ditheringAndMaskTinting;
     v_fog = fog;
@@ -104,5 +161,9 @@ void main() {
     p = a_position;
     wp = worldPos;
     fctl = FogAndDistanceControl;
-    ks = gl_Position.xyz;
+    ks = position.xyz;
+
+#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
+    gl_Position += gerakClip(gerak(a_position, a_color0, lightmapY));
+#endif
 }
