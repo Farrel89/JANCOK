@@ -316,7 +316,7 @@ void main() {
         vec3 _588 = mix(
             _552.xyz,
             _552.xyz * v_color0.xyz,
-            vec3(_552.w)
+            vec3_splat(_552.w)
         ).xyz * _811.w;
 
         _552 = vec4(_588, _552.w);
@@ -343,7 +343,7 @@ void main() {
             );
 
             ao = mix(0.8, ao, terbuka);
-            _aoMul = vec3(ao);
+            _aoMul = vec3_splat(ao);
         }
 
         vec3 _596 = _552.xyz * _aoMul;
@@ -357,7 +357,7 @@ void main() {
         mix(
             texture2D(s_LightMapTexture, v_lightmapUV).xyz * _552.xyz,
             FogColor.xyz,
-            vec3(_666.w)
+            vec3_splat(_666.w)
         ),
         _552.w
     );
@@ -429,8 +429,8 @@ void main() {
     float dir = max(N.x, -N.z);
 
     _finalColor.xyz *= mix(
-        vec3(0.75),
-        vec3(0.65),
+        vec3_splat(0.75),
+        vec3_splat(0.65),
         dir
         * (1.0 - pow(v_lightmapUV.x * 0.9, 4.7))
         * (1.0 - goa)
@@ -439,7 +439,7 @@ void main() {
     );
 
     // Color grading and tonemapping
-    _finalColor.rgb *= vec3(1.7);
+    _finalColor.rgb *= vec3_splat(1.7);
     _finalColor.rgb = saturation(_finalColor.rgb, 1.2);
 
     if (!udw) {
@@ -506,10 +506,10 @@ void main() {
                     _finalColor.rgb,
                     mix(
                         vec3(0.1, 0.5, 1.0) * 1.2,
-                        vec3(1.1),
+                        vec3_splat(1.1),
                         length(-ks) / 70.0
                     ),
-                    fresnel(vec3(0.3), NdotV)
+                    fresnel(vec3_splat(0.3), NdotV)
                 ),
                 siangd * (1.0 - hujand)
             );
@@ -523,7 +523,7 @@ void main() {
                         vec3(1.0, 0.8, 0.1),
                         length(-ks) / 70.0
                     ),
-                    fresnel(vec3(0.3), NdotV)
+                    fresnel(vec3_splat(0.3), NdotV)
                 ),
                 sored * (1.0 - hujand)
             );
@@ -564,14 +564,14 @@ void main() {
 
                 vec3 awHasil = mix(
                     _finalColor.rgb,
-                    vec3(1.0),
+                    vec3_splat(1.0),
                     awMask
                 );
 
                 _finalColor.rgb = mix(
                     _finalColor.rgb,
                     awHasil,
-                    fresnel(vec3(0.3), NdotV)
+                    fresnel(vec3_splat(0.3), NdotV)
                 );
             }
         }
@@ -588,7 +588,7 @@ void main() {
 
             vec3 sisiAtas = mix(
                 vec3(0.1, 0.5, 1.0) * 1.2,
-                vec3(1.1),
+                vec3_splat(1.1),
                 clamp(
                     length(wp.xz) / max(abs(wp.y), 0.1) * 0.1,
                     0.05,
@@ -601,7 +601,7 @@ void main() {
             _finalColor.rgb = mix(
                 _finalColor.rgb,
                 mix(sisiBawah, sisiAtas, awAtas),
-                fresnel(vec3(0.3), NdotV)
+                fresnel(vec3_splat(0.3), NdotV)
             );
 
             vec3 soreAtas = vec3(0.1, 0.5, 1.0) * 1.2;
@@ -610,7 +610,7 @@ void main() {
             _finalColor.rgb = mix(
                 _finalColor.rgb,
                 mix(soreBawah, soreAtas, awAtas),
-                fresnel(vec3(0.3), NdotV) * sored * (1.0 - hujand)
+                fresnel(vec3_splat(0.3), NdotV) * sored * (1.0 - hujand)
             );
         }
 
@@ -653,14 +653,14 @@ void main() {
 
                 vec3 awHasil = mix(
                     _finalColor.rgb,
-                    vec3(1.0),
+                    vec3_splat(1.0),
                     awMask
                 );
 
                 _finalColor.rgb = mix(
                     _finalColor.rgb,
                     awHasil,
-                    fresnel(vec3(0.3), NdotV)
+                    fresnel(vec3_splat(0.3), NdotV)
                 );
             }
 
@@ -700,14 +700,14 @@ void main() {
 
                 vec3 awHasil = mix(
                     _finalColor.rgb,
-                    vec3(1.0),
+                    vec3_splat(1.0),
                     awMask
                 );
 
                 _finalColor.rgb = mix(
                     _finalColor.rgb,
                     awHasil,
-                    fresnel(vec3(0.3), NdotV)
+                    fresnel(vec3_splat(0.3), NdotV)
                 );
             }
         }
@@ -738,14 +738,14 @@ void main() {
 
         vec3 gnBasah = mix(
             _finalColor.rgb,
-            vec3(dot(_finalColor.rgb, vec3(0.333))),
+            vec3_splat(dot(_finalColor.rgb, vec3_splat(0.333))),
             0.4
         ) * 0.7;
 
         vec3 gnKilap = mix(
             gnBasah,
             FogColor.rgb * 1.2 + 0.1,
-            fresnel(vec3(0.15), NdotV)
+            fresnel(vec3_splat(0.15), NdotV)
         );
 
         _finalColor.rgb = mix(
@@ -876,7 +876,7 @@ void main() {
     // Nether
     if (nether) {
         _finalColor.rgb *= vec3(1.5, 0.9, 0.0) * (1.0 - sored);
-        _finalColor.rgb += vec3(0.2);
+        _finalColor.rgb += vec3_splat(0.2);
         _finalColor.rgb = Tm(_finalColor.rgb) * 0.9;
 
         vec3 fogn = mix(
