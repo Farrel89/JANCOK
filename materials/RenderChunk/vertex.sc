@@ -15,39 +15,7 @@ uniform vec4 ViewPositionAndTime;
 uniform vec4 FogColor;
 uniform vec4 MeshContext;
 
-// ===== animasi vertex (offset dalam ruang dunia) =====
 #define FOG_AMOUNT 0.3
-
-#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
-vec3 gerak(vec3 lpos, vec4 col, float sky) {
-    float t  = ViewPositionAndTime.w;
-    // fase dari posisi lokal chunk; kelipatan 2*PI/16 supaya mulus di batas chunk dan tidak ikut kamera
-    float ph = (lpos.x + lpos.y + lpos.z) * 1.1781;
-    vec3 frp = fract(lpos);
-    vec3 o   = vec3_splat(0.0);
-
-#if defined(ALPHA_TEST)
-    // daun & rumput
-    bool tinted = (col.r != col.g && col.g != col.b && frp.y != 0.015625);
-    bool pucuk  = (frp.y == 0.9375 && (frp.x == 0.0 || frp.z == 0.0));
-    if (col.a == 0.0 || tinted || pucuk) {
-        o.x += sin(t * 2.0 + ph) * 0.03;
-    }
-#elif defined(TRANSPARENT)
-    // air: hanya vertex berwarna biru; makin tinggi di blok makin kuat, redup di gua
-    if (col.b > col.r) {
-        o.y += sin(t * 4.0 + (lpos.x + lpos.z) * 1.9635 + lpos.y * 0.3927)
-             * sin(lpos.z * 1.1781) * 0.05 * sky * frp.y;
-    }
-#endif
-
-    // bawah air: seluruh dunia bergoyang pelan
-    if (FogAndDistanceControl.x < 0.01) {
-        o.x += sin(t * 2.0 + ph) * 0.03;
-    }
-    return o;
-}
-#endif
 
 void main() {
 #ifdef INSTANCING
@@ -101,13 +69,7 @@ void main() {
 
     vec2 ditheringAndMaskTinting = vec2(ditherX, ditherY);
 
-    // posisi layar tanpa animasi (dipakai ks / v_clipPosition) dan dengan animasi (gl_Position)
-    vec3 geser = vec3_splat(0.0);
-#if !defined(DEPTH_ONLY) && !defined(DEPTH_ONLY_OPAQUE) && !defined(DEPTH_ONLY_ALPHA_TEST)
-    geser = gerak(a_position, a_color0, lightmapY);
-#endif
     vec4 position = jitterVertexPosition(worldPos);
-    vec4 positionAnim = jitterVertexPosition(worldPos + geser);
 
     float camDist = length(ViewPositionAndTime.xyz - worldPos);
 
@@ -145,7 +107,7 @@ void main() {
     v_texcoord0 = uv0;
     v_worldPos = worldPos;
 
-    gl_Position = positionAnim;
+    gl_Position = position;
 
     p = a_position;
     wp = worldPos;
